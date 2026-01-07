@@ -2,13 +2,25 @@ import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import { api } from "..";
 
-const contratoSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório"),
-  email: z.email("E-mail inválido"),
-  plano: z.string().min(1, "Plano é obrigatório"),
-  valor: z.string().min(1, "Valor é obrigatório"),
-  status: z.string().min(1, "Status é obrigatório"),
-  data_inicio: z.string().min(1, "Data é obrigatória"),
+export const contratoSchema = z.object({
+  nome: z.string().trim().min(1, "Nome é obrigatório"),
+  email: z.email("E-mail inválido").trim(),
+  plano: z.enum(["Basico", "Pro", "Enterprise"], {
+    message: "Plano inválido",
+  }),
+  valor: z.coerce
+    .number({
+      error: "Valor deve ser um número",
+    })
+    .positive("Valor deve ser maior que 0"),
+  status: z.enum(["Ativo", "Inativo"], {
+    message: "Status inválido",
+  }),
+  data_inicio: z
+    .string()
+    .trim()
+    .refine((v) => /^\d{4}-\d{2}-\d{2}$/.test(v), "Data deve estar no formato YYYY-MM-DD")
+    .refine((v) => !isNaN(new Date(v).getTime()), "Data inválida"),
 });
 
 type Contrato = z.infer<typeof contratoSchema>;
@@ -18,7 +30,7 @@ export const GET = async (req: NextRequest) => {
 
   if (!token) return NextResponse.json({ contratos: [], message: "Não autorizado", error: true }, { status: 401 });
 
-  const contratos: Contrato[] = await api.get("/contratos", {
+  const { data: contratos } = await api.get<Contrato[]>("/contratos", {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -61,9 +73,9 @@ export const POST = async (req: NextRequest) => {
     );
   }
 
-  const body: Contrato = parsed.data;
+  const body = parsed.data;
 
-  const contrato: Contrato = await api.post("/contratos/upload", body, {
+  const { data: contrato } = await api.post<Contrato>("/contratos/upload", body, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -73,6 +85,6 @@ export const POST = async (req: NextRequest) => {
       message: "Contrato criado com sucesso!",
       error: false,
     },
-    { status: 200 },
+    { status: 201 },
   );
 };
