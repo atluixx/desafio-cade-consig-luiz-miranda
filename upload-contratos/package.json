@@ -9,9 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "axios": "^1.13.2",
+    "feather-icons-react": "^1.0.0",
     "next": "16.1.1",
+    "next-themes": "^0.4.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-dropzone": "^14.3.8",
+    "react-hot-toast": "^2.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
