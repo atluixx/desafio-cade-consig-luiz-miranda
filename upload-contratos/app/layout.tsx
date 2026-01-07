@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import Header from "./components/Header";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,9 +29,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider enableSystem defaultTheme="system" attribute="class">
-          <div className="flex flex-col items-center h-screen w-screen">
+          <div className="flex flex-col items-center h-screen w-screen overflow-hidden">
             <Header />
             {children}
+
+            <Toaster position="top-center" />
           </div>
         </ThemeProvider>
       </body>

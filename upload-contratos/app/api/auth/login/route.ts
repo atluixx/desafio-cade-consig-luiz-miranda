@@ -37,7 +37,7 @@ export const POST = async (req: NextRequest) => {
   try {
     const { data } = await api.post("/login", body);
 
-    const token = data?.token;
+    const token = data?.access_token;
 
     if (!token)
       return NextResponse.json({ usuario: null, message: "Token não retornado", error: true }, { status: 500 });
