@@ -7,23 +7,17 @@ export default function Pagination({
 }: {
   page: number;
   totalPages: number;
-  setPage: React.Dispatch<React.SetStateAction<number>>;
+  setPage: (p: number) => void;
 }) {
   return (
-    <div className="flex justify-between mt-4 text-sm">
-      <span>
-        Página {page} de {totalPages}
-      </span>
+    <div className="flex gap-2">
+      <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+        Anterior
+      </Button>
 
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-          Anterior
-        </Button>
-
-        <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
-          Próxima
-        </Button>
-      </div>
+      <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+        Próxima
+      </Button>
     </div>
   );
 }

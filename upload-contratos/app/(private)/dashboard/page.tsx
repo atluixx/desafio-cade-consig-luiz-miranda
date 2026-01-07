@@ -17,8 +17,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [page, setPage] = useState(1);
-
-  const limit = 20;
+  const [limit, setLimit] = useState(20);
 
   const [idContrato, setIdContrato] = useState("");
   const [nome, setNome] = useState("");
@@ -37,7 +36,7 @@ export default function Dashboard() {
         params: {
           page,
           limit,
-          id_contrato: idContrato.trim() || undefined,
+          id_contrato: idContrato || undefined,
           nome_cliente: nome || undefined,
           email_cliente: email || undefined,
           tipo_plano: plano || undefined,
@@ -50,7 +49,6 @@ export default function Dashboard() {
 
       setData({
         ...data.contratos,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         items: data.contratos.items.map((c: any) => ({
           id: c.id_contrato,
           nome: c.nome_cliente,
@@ -66,7 +64,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [page, idContrato, nome, email, plano, status, valorFiltro, dataTexto]);
+  }, [page, limit, idContrato, nome, email, plano, status, valorFiltro, dataTexto]);
 
   useEffect(() => {
     carregar();
@@ -88,7 +86,6 @@ export default function Dashboard() {
         await axios.post("/api/contratos", form, { withCredentials: true });
         toast.success("Contratos importados!");
         carregar();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         toast.error(e?.response?.data?.message ?? "Erro ao importar arquivo");
       } finally {
@@ -173,7 +170,43 @@ export default function Dashboard() {
           <ContractsTable contratos={data.items} />
         )}
 
-        {data && <Pagination page={data.page} totalPages={data.totalPages} setPage={setPage} />}
+        {data && (
+          <div className="flex flex-col gap-3 mt-4">
+            <div className="flex items-center gap-3 text-sm">
+              <span>
+                Página {data.page} de {data.totalPages}
+              </span>
+
+              <input
+                type="number"
+                min={1}
+                max={data.totalPages}
+                className="border rounded px-2 py-1 w-20"
+                value={page}
+                onChange={(e) => setPage(Number(e.target.value) || 1)}
+              />
+
+              <select
+                className="border rounded px-2 py-1 text-white bg-background"
+                value={limit}
+                onChange={(e) => {
+                  const v = Math.min(100, Number(e.target.value));
+                  setLimit(v);
+                  setPage(1);
+                }}
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+
+              <span>por página</span>
+            </div>
+
+            <Pagination page={data.page} totalPages={data.totalPages} setPage={setPage} />
+          </div>
+        )}
       </section>
     </main>
   );
