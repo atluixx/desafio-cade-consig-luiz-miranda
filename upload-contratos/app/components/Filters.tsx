@@ -9,6 +9,8 @@ import { useState } from "react";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function Filters(props: any) {
   const {
+    idContrato,
+    setIdContrato,
     nome,
     setNome,
     email,
@@ -82,7 +84,10 @@ export default function Filters(props: any) {
       <h2 className="font-medium">Filtros</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <Input placeholder="ID do contrato" value={idContrato} onChange={(e) => setIdContrato(e.target.value)} />
+
         <Input placeholder="Nome do cliente" value={nome} onChange={(e) => setNome(e.target.value)} />
+
         <Input placeholder="Email do cliente" value={email} onChange={(e) => setEmail(e.target.value)} />
 
         <Select value={plano} onValueChange={setPlano}>

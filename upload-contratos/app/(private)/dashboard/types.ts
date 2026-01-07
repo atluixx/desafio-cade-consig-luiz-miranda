@@ -1,4 +1,5 @@
 export type Contrato = {
+  id: string;
   nome: string;
   email: string;
   plano: string;

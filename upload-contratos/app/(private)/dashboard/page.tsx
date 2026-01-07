@@ -20,6 +20,7 @@ export default function Dashboard() {
 
   const limit = 20;
 
+  const [idContrato, setIdContrato] = useState("");
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [plano, setPlano] = useState<string>();
@@ -36,6 +37,7 @@ export default function Dashboard() {
         params: {
           page,
           limit,
+          id_contrato: idContrato.trim() || undefined,
           nome_cliente: nome || undefined,
           email_cliente: email || undefined,
           tipo_plano: plano || undefined,
@@ -50,6 +52,7 @@ export default function Dashboard() {
         ...data.contratos,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         items: data.contratos.items.map((c: any) => ({
+          id: c.id_contrato,
           nome: c.nome_cliente,
           email: c.email_cliente,
           plano: c.tipo_plano,
@@ -63,7 +66,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [page, nome, email, plano, status, valorFiltro, dataTexto]);
+  }, [page, idContrato, nome, email, plano, status, valorFiltro, dataTexto]);
 
   useEffect(() => {
     carregar();
@@ -85,7 +88,6 @@ export default function Dashboard() {
         await axios.post("/api/contratos", form, { withCredentials: true });
         toast.success("Contratos importados!");
         carregar();
-
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         toast.error(e?.response?.data?.message ?? "Erro ao importar arquivo");
@@ -121,6 +123,8 @@ export default function Dashboard() {
       </div>
 
       <Filters
+        idContrato={idContrato}
+        setIdContrato={setIdContrato}
         nome={nome}
         setNome={setNome}
         email={email}
@@ -141,6 +145,7 @@ export default function Dashboard() {
           carregar();
         }}
         limpar={() => {
+          setIdContrato("");
           setNome("");
           setEmail("");
           setPlano(undefined);
