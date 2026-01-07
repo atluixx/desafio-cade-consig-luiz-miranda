@@ -25,66 +25,67 @@ export const contratoSchema = z.object({
 
 type Contrato = z.infer<typeof contratoSchema>;
 
-export const GET = async (req: NextRequest) => {
-  const token = req.cookies.get("access_token")?.value;
+export async function GET(req: NextRequest) {
+  try {
+    const token = req.cookies.get("access_token")?.value;
 
-  if (!token) return NextResponse.json({ contratos: [], message: "Não autorizado", error: true }, { status: 401 });
+    if (!token) return NextResponse.json({ contratos: null, message: "Não autorizado" }, { status: 401 });
 
-  const { data: contratos } = await api.get<Contrato[]>("/contratos", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+    const { searchParams } = new URL(req.url);
+    const page = Number(searchParams.get("page") ?? 1);
+    const limit = Number(searchParams.get("limit") ?? 20);
 
-  return NextResponse.json(
-    {
-      contratos,
-      message: `${contratos.length} contratos encontrados!`,
-      error: false,
-    },
-    { status: 200 },
-  );
-};
+    const { data } = await api.get("/contratos", {
+      params: { page, limit },
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return NextResponse.json({ contratos: data });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ contratos: null, message: "Erro no servidor" }, { status: 500 });
+  }
+}
 
 export const POST = async (req: NextRequest) => {
   const token = req.cookies.get("access_token")?.value;
 
   if (!token) return NextResponse.json({ contrato: null, message: "Não autorizado", error: true }, { status: 401 });
 
-  let raw;
+  let formData: FormData;
 
   try {
-    raw = await req.json();
+    formData = await req.formData();
   } catch {
-    return NextResponse.json({ contrato: null, message: "JSON inválido", error: true }, { status: 400 });
+    return NextResponse.json({ contrato: null, message: "Form inválido", error: true }, { status: 400 });
   }
 
-  const parsed = contratoSchema.safeParse(raw);
+  const file = formData.get("file") as File | null;
 
-  if (!parsed.success) {
-    const tree = z.treeifyError(parsed.error);
+  if (!file) return NextResponse.json({ contrato: null, message: "Arquivo não enviado", error: true }, { status: 400 });
+
+  const backendForm = new FormData();
+  backendForm.append("file", file);
+
+  try {
+    const { data } = await api.post("/contratos/upload", backendForm, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return NextResponse.json({ data, message: "Upload concluído!", error: false }, { status: 201 });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    console.error("Backend upload error:", err?.response?.data ?? err);
 
     return NextResponse.json(
       {
-        contrato: null,
-        message: "Dados inválidos",
-        errors: tree,
+        data: null,
+        message: err?.response?.data?.message ?? "Erro ao enviar arquivo",
         error: true,
       },
-      { status: 400 },
+      { status: err?.response?.status ?? 400 },
     );
   }
-
-  const body = parsed.data;
-
-  const { data: contrato } = await api.post<Contrato>("/contratos/upload", body, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  return NextResponse.json(
-    {
-      contrato,
-      message: "Contrato criado com sucesso!",
-      error: false,
-    },
-    { status: 201 },
-  );
 };

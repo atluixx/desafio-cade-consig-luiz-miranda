@@ -19,7 +19,7 @@ export default function Login(): JSX.Element {
     try {
       await axios.post("/api/auth/login", { usuario, senha }, { withCredentials: true });
 
-      toast.success("Login realizado com sucesso! 🎉");
+      toast.success("Login realizado com sucesso!");
       window.location.href = "/dashboard";
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
