@@ -53,7 +53,16 @@ export async function GET(req: NextRequest) {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    return NextResponse.json({ contratos: data });
+    const contratos = {
+      ...data,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      items: data.items?.map((c: any) => ({
+        ...c,
+        data_inicio: c.data_inicio ? new Date(c.data_inicio).toISOString().substring(0, 10) : null,
+      })),
+    };
+
+    return NextResponse.json({ contratos });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ contratos: null, message: "Erro no servidor" }, { status: 500 });
