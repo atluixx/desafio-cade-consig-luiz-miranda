@@ -5,6 +5,8 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 type Contrato = {
   nome: string;
@@ -31,12 +33,24 @@ export default function Dashboard() {
 
   const limit = 20;
 
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [plano, setPlano] = useState<string | undefined>();
+  const [status, setStatus] = useState<string | undefined>();
+
   const carregar = useCallback(async () => {
     try {
       setLoading(true);
 
       const res = await axios.get("/api/contratos", {
-        params: { page, limit },
+        params: {
+          page,
+          limit,
+          nome_cliente: nome || undefined,
+          email_cliente: email || undefined,
+          tipo_plano: plano || undefined,
+          status: status || undefined,
+        },
         withCredentials: true,
       });
 
@@ -61,7 +75,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, nome, email, plano, status]);
 
   useEffect(() => {
     carregar();
@@ -137,6 +151,62 @@ export default function Dashboard() {
         Arraste um CSV aqui ou clique em “Importar CSV”.
       </div>
 
+      <section className="border rounded-lg p-4 space-y-4">
+        <h2 className="font-medium">Filtros</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <Input placeholder="Nome do cliente" value={nome} onChange={(e) => setNome(e.target.value)} />
+
+          <Input placeholder="Email do cliente" value={email} onChange={(e) => setEmail(e.target.value)} />
+
+          <Select onValueChange={setPlano} value={plano}>
+            <SelectTrigger>
+              <SelectValue placeholder="Plano" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Basico">Básico</SelectItem>
+              <SelectItem value="Pro">Pro</SelectItem>
+              <SelectItem value="Enterprise">Enterprise</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select onValueChange={setStatus} value={status}>
+            <SelectTrigger>
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ATIVO">Ativo</SelectItem>
+              <SelectItem value="INATIVO">Inativo</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            onClick={() => {
+              setPage(1);
+              carregar();
+            }}
+            disabled={loading}
+          >
+            Aplicar filtros
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={() => {
+              setNome("");
+              setEmail("");
+              setPlano(undefined);
+              setStatus(undefined);
+              setPage(1);
+            }}
+          >
+            Limpar filtros
+          </Button>
+        </div>
+      </section>
+
       <section className="border rounded-lg p-4">
         <div className="flex justify-between mb-4">
           <h2 className="font-medium">Contratos</h2>
@@ -162,6 +232,7 @@ export default function Dashboard() {
                 <th className="text-left py-2 px-3">Data início</th>
               </tr>
             </thead>
+
             <tbody>
               {contratos.map((c, i) => (
                 <tr key={i} className="border-b last:border-0">

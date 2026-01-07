@@ -23,20 +23,33 @@ export const contratoSchema = z.object({
     .refine((v) => !isNaN(new Date(v).getTime()), "Data inválida"),
 });
 
-type Contrato = z.infer<typeof contratoSchema>;
-
 export async function GET(req: NextRequest) {
   try {
     const token = req.cookies.get("access_token")?.value;
 
-    if (!token) return NextResponse.json({ contratos: null, message: "Não autorizado" }, { status: 401 });
+    if (!token) {
+      return NextResponse.json({ contratos: null, message: "Não autorizado" }, { status: 401 });
+    }
 
     const { searchParams } = new URL(req.url);
+
     const page = Number(searchParams.get("page") ?? 1);
-    const limit = Number(searchParams.get("limit") ?? 20);
+    const limit = Math.min(Number(searchParams.get("limit") ?? 20), 100);
+
+    const filters = {
+      id_contrato: searchParams.get("id_contrato") ?? undefined,
+      nome_cliente: searchParams.get("nome_cliente") ?? undefined,
+      email_cliente: searchParams.get("email_cliente") ?? undefined,
+      tipo_plano: searchParams.get("tipo_plano") ?? undefined,
+      valor_mensal: searchParams.get("valor_mensal") ?? undefined,
+      status: searchParams.get("status") ?? undefined,
+      data_inicio: searchParams.get("data_inicio") ?? undefined,
+      page,
+      limit,
+    };
 
     const { data } = await api.get("/contratos", {
-      params: { page, limit },
+      params: filters,
       headers: { Authorization: `Bearer ${token}` },
     });
 
